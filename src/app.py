@@ -25,6 +25,7 @@ CORS(app)
 
 MODEL_PATH = BASE_DIR / "models" / "spam_classifier_pipeline.pkl"
 SPAM_THRESHOLD = float(os.environ.get("SPAM_THRESHOLD", "0.7"))
+FRONTEND_URL = os.environ.get("FRONTEND_URL")
 
 SAFE_KEYWORDS = {
     "team", "meeting", "review", "report", "reminder", "doctor", "appointment",
@@ -151,7 +152,13 @@ except Exception as exc:  # pragma: no cover - defensive fallback
 
 @app.route('/')
 def home():
-    return render_template('index.html')
+    payload: Dict[str, Any] = {
+        "message": "ArchMail Shield API is running. Host the UI via GitHub Pages (docs/) or use /predict directly.",
+        "predict_endpoint": "/predict",
+    }
+    if FRONTEND_URL:
+        payload["frontend_url"] = FRONTEND_URL
+    return jsonify(payload)
 
 @app.route('/health', methods=['GET'])
 def health() -> tuple[Dict[str, Any], int]:

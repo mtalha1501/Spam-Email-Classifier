@@ -1,204 +1,150 @@
-# ArchMail Shield — Email Spam Classifier# Email Spam Classifier
+# ArchMail Shield — Email Spam Classifier
 
-ArchMail Shield is a machine-learning powered spam filter that serves real-time predictions through a Flask API and a responsive Bootstrap front-end. The model was trained on the Enron email corpus and persisted as a scikit-learn pipeline, then enhanced at inference time with lightweight keyword calibration to reduce false positives on day-to-day messages.This project implements a machine learning model to classify emails as spam or legitimate. It includes a complete pipeline from data preprocessing to model deployment with a web interface.
+ArchMail Shield combines a trained scikit-learn pipeline, a modern Flask API, and a polished web interface to help you flag suspicious emails in seconds. It now ships with a static "browser-only" mode so you can host the UI for free on GitHub Pages while optionally pointing it at a remote inference API.
 
-## Features## Project Structure
+<br>
 
-- 🔍 **Interactive web interface** for pasting any email body and seeing instant results with confidence scores.```
+## ✨ Highlights
 
-- 🧠 **Persisted Random Forest pipeline** (`models/spam_classifier_pipeline.pkl`) bundled with vocabulary-aware vectorisation.├── data/
+- **ML-powered predictions** — Random Forest pipeline persisted at `models/spam_classifier_pipeline.pkl` and loaded by `src/app.py`.
+- **Confidence + calibration** — Probability adjustments driven by curated spam/ham keyword lists to reduce false positives.
+- **Two deployment targets**:
+  - Dynamic: Flask backend + `templates/index.html` for full model accuracy.
+  - Static: `docs/` bundle for GitHub Pages with offline heuristics and optional remote API integration.
+- **Transparent diagnostics** — API and static UI expose raw probabilities, adjustments, and keyword hit counts.
 
-- ⚙️ **Configurable spam threshold** via the `SPAM_THRESHOLD` environment variable, plus keyword-based calibration to balance precision/recall.│ └── emails.csv # Email dataset
+<br>
 
-- 🌐 **REST API endpoint** (`POST /predict`) that accepts JSON or form payloads and returns structured results.├── models/ # Saved model files
+## 📁 Repository layout
 
-- 📊 **Transparent diagnostics** including raw probability, adjustment amount, and keyword hit counts to aid debugging and reporting.├── notebooks/
-
-│ └── email_spam_classification.ipynb # Analysis notebook
-
-## Project structure├── src/
-
-│ └── app.py # Flask application
-
-````├── templates/
-
-Task 1 - Email Spam Classifier/│   └── index.html         # Web interface
-
-├── data/└── README.md
-
-│   └── emails.csv```
-
+```
+Task 1 - Email Spam Classifier/
+├── data/
+│   └── emails.csv
+├── docs/                     # Static site ready for GitHub Pages
+│   ├── assets/
+│   │   ├── css/styles.css
+│   │   └── js/
+│   │       ├── app.js
+│   │       └── config.js
+│   └── index.html
 ├── models/
-
-│   └── spam_classifier_pipeline.pkl## Features
-
+│   └── spam_classifier_pipeline.pkl
 ├── notebooks/
+│   └── spam_classifier_full.ipynb
+├── src/
+│   └── app.py                # Flask app + model loader + calibration
+├── templates/
+│   └── index.html            # Flask-rendered UI
+├── requirements.txt
+└── README.md
+```
 
-│   └── spam_classifier_full.ipynb- Data preprocessing and cleaning
+<br>
 
-├── src/- Exploratory Data Analysis (EDA)
-
-│   └── app.py- Feature engineering using TF-IDF
-
-├── templates/- Multiple model implementations:
-
-│   └── index.html  - Naive Bayes
-
-└── requirements.txt  - Random Forest
-
-```  - Linear SVM
-
-- Model evaluation and optimization
-
-- `src/app.py` — Flask application, model loader, probability calibration, and API routes.- Web interface for real-time predictions
-
-- `templates/index.html` — Responsive UI that consumes the `/predict` endpoint.
-
-- `models/spam_classifier_pipeline.pkl` — Pickled inference pipeline created in the notebook.## Setup and Installation
-
-- `data/emails.csv` — Source for vocabulary reconstruction when serving predictions.
-
-1. Clone the repository
-
-## Prerequisites2. Create a virtual environment:
-
-````
-
-- Python 3.11 (3.10+ should work, but the project was developed on 3.11.9). python -m venv .venv
-
-- pip for dependency management. ```
-
-- (Optional) PowerShell or another shell for command execution on Windows.3. Activate the virtual environment:
-
-  - Windows: `.venv\Scripts\activate`
-
-## Setup - Unix/Mac: `source .venv/bin/activate`
-
-4. Install requirements:
-
-`powershell   `
-
-# 1. Clone or copy the repository pip install pandas numpy scikit-learn flask nltk jupyter matplotlib seaborn
-
-cd "E:\My CS\InternShips\Machine Learning - ARCH TECHNOLOGIES - SEP 1 to OCT 31 - Year 2025\Task 1 - Email Spam Classifier" ```
-
-# 2. (Recommended) Create and activate a virtual environment## Usage
-
-python -m venv .venv
-
-.\.venv\Scripts\Activate.ps11. Run the Jupyter notebook to train the model:
-
-# 3. Install dependencies ```
-
-pip install -r requirements.txt jupyter notebook notebooks/email_spam_classification.ipynb
-
-`   `
-
-> **Tip:** If you see `ModuleNotFoundError` for Flask or Flask-Cors, ensure the virtual environment is active before installing packages.2. Start the Flask application:
-
-## Running the development server ```
-
-python src/app.py
-
-`powershell   `
-
-# Ensure the virtual environment is active first
-
-$env:FLASK_APP = "src.app"3. Open your browser and navigate to `http://localhost:5000`
-
-python -m flask run --port 8000
-
-````## Model Performance
-
-
-
-Open <http://127.0.0.1:8000> in a browser, paste an email body, and submit to receive a spam/ham verdict with confidence and threshold details.The model achieves high accuracy in spam detection through:
-
-
-
-## API usage- Comprehensive text preprocessing
-
-- TF-IDF feature extraction
-
-The `/predict` endpoint accepts either JSON or form data. Example JSON request:- Multiple model comparison
-
-- Hyperparameter optimization
+## 🚀 Quick start (local Flask API)
 
 ```powershell
+# 1. Clone or open the repository
+cd "E:\My CS\InternShips\Machine Learning - ARCH TECHNOLOGIES - SEP 1 to OCT 31 - Year 2025\Task 1 - Email Spam Classifier"
 
-Invoke-RestMethod \## Web Interface
+# 2. (Recommended) create and activate a virtual environment
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
 
-  -Uri "http://127.0.0.1:8000/predict" \
+# 3. Install dependencies
+pip install -r requirements.txt
 
-  -Method Post \The web interface provides:
+# 4. Launch the API
+$env:FLASK_APP = "src.app"
+python -m flask run --port 8000
+```
 
-  -Body (@{ email_text = 'Reminder: Doctor appointment on Monday at 3pm.' } | ConvertTo-Json) \
+Visit <http://127.0.0.1:8000> to use the full ML-powered interface.
 
-  -ContentType "application/json"- Simple text input for email content
+<br>
 
-```- Real-time spam prediction
+## 🌐 Static UI on GitHub Pages (free)
 
-- Clear visual feedback
+1. **Prepare the `docs/` folder** (already present): it contains a static `index.html` with bundled assets.
+2. **(Optional) Configure a remote API**
+   - Edit `docs/assets/js/config.js` and set `apiBaseUrl` to your hosted Flask endpoint, e.g.:
+     ```js
+     window.APP_CONFIG = { apiBaseUrl: 'https://archmail-api.onrender.com' };
+     ```
+   - Alternatively, append query parameters when browsing: `https://<user>.github.io/<repo>/?api=https%3A%2F%2Farchmail-api.onrender.com`.
+3. **Commit & push `docs/` to `main`**, then enable GitHub Pages:
+   - Repository ➜ Settings ➜ Pages ➜ "Deploy from a branch" ➜ Branch `main`, Folder `/docs`.
+4. Wait for the deployment to finish. Your site will be available at `https://<username>.github.io/<repo>/`.
 
-Sample JSON response:- Responsive design
+> 🔁 When no API is configured or reachable, the static page falls back to browser-based heuristics using the same keyword calibration logic. This keeps the experience usable on GitHub Pages without backend costs.
 
+<br>
 
+## ⚙️ Configuration options
 
-```json## Future Improvements
+| Setting | Location | Default | Purpose |
+| --- | --- | --- | --- |
+| `SPAM_THRESHOLD` | Environment variable (Flask) | `0.7` | Minimum probability required to label an email as spam. |
+| `SAFE_KEYWORDS`, `SPAM_KEYWORDS` | `src/app.py` | — | Lists used for probability calibration in the Flask API. |
+| `window.APP_CONFIG.apiBaseUrl` | `docs/assets/js/config.js` | `null` | Remote prediction endpoint for the static UI. |
+| `window.APP_CONFIG.spamThreshold` | `docs/assets/js/config.js` | `0.7` | Threshold applied in browser mode (also overridable via `?threshold=0.6`). |
 
-{
+<br>
 
-  "success": true,- Add support for email file uploads
+## 🛠️ API reference
 
-  "is_spam": false,- Implement additional feature extraction methods
-
-  "probability": 0.69,- Add model retraining capability
-
-  "threshold": 0.7,- Enhance the web interface with more features
-
-  "raw_probability": 0.99,
-
-  "probability_adjustment": -0.30,## License
-
-  "spam_keyword_hits": 0,
-
-  "ham_keyword_hits": 3,MIT License
-
-  "message": "✅ This email looks legitimate."
-}
-````
-
-## Configuration
-
-- **`SPAM_THRESHOLD`**: Controls the minimum adjusted probability required to label a message as spam. Defaults to `0.7`.
-
-  ```powershell
-  $env:SPAM_THRESHOLD = "0.75"
-  python -m flask run --port 8000
+- `GET /health` — JSON status indicating whether the model loaded successfully.
+- `POST /predict` — Accepts `{ "email_text": "..." }` or form data. Returns:
+  ```json
+  {
+    "success": true,
+    "is_spam": false,
+    "probability": 0.34,
+    "threshold": 0.7,
+    "raw_probability": 0.84,
+    "probability_adjustment": -0.50,
+    "spam_keyword_hits": 0,
+    "ham_keyword_hits": 5,
+    "message": "✅ This email looks legitimate."
+  }
   ```
 
-- **Keyword calibration**: `src/app.py` contains allow/deny lists (`SAFE_KEYWORDS`, `SPAM_KEYWORDS`) that tweak the raw model probability. Adjust these sets to better reflect your domain.
+<br>
 
-## Quick validation script
+## ✅ Quick validation snippets
 
-Use the built-in Flask test client for fast checks without starting the server:
+Use Flask’s test client to sanity check predictions without starting the server:
 
 ```powershell
 python -c "from src.app import app; client = app.test_client();\nprint(client.post('/predict', json={'email_text': 'Win a FREE vacation prize now!'}).get_json())"
 ```
 
-## Model provenance
+Test the static heuristic classifier by opening `docs/index.html` directly in a browser or via a local HTTP server:
 
-- Training notebook: `notebooks/spam_classifier_full.ipynb`
-- Training data: Enron email corpus variant stored in `data/emails.csv`
-- Model artifact: persisted Random Forest pipeline with scaler and vocabulary metadata
+```powershell
+python -m http.server --directory docs 8080
+# Navigate to http://127.0.0.1:8080
+```
 
-Re-training is optional for serving, but if you do re-train, ensure you update `models/spam_classifier_pipeline.pkl` and keep `data/emails.csv` aligned so vectorisation functions correctly.
+<br>
 
-## Next steps
+## 🧱 Tech stack
 
-- Containerise or deploy behind a WSGI server (e.g., gunicorn) for production use.
-- For static hosting (e.g., GitHub Pages), consider bundling the inference API separately (serverless function, Flask on Render/Heroku) and point the front-end AJAX calls to that endpoint.
-- Add automated tests around `_adjust_probability` to detect regression in calibration heuristics.
+- Python 3.11, Flask, Flask-CORS
+- scikit-learn, pandas, numpy
+- Bootstrap 5, vanilla JavaScript
+
+<br>
+
+## 📌 Deployment checklist
+
+- [ ] Push latest changes to `main` (including `docs/`).
+- [ ] Enable GitHub Pages (`main` ➜ `/docs`).
+- [ ] (Optional) Deploy Flask API to Render/Railway/Fly/Heroku and record the URL.
+- [ ] Set `apiBaseUrl` in `docs/assets/js/config.js` or via query string.
+- [ ] Smoke test the GitHub Pages site on desktop + mobile.
+
+<br>
 
 Happy filtering! 🛡️✉️
