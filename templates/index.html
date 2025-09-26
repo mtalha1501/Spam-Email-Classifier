@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Spam Classifier</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --gradient-start: #4f46e5;
+            --gradient-end: #0ea5e9;
+            --bg-muted: #f8f9ff;
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background: var(--bg-muted);
+            font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+
+        header.hero {
+            background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+            color: white;
+            padding: 4rem 0 3rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        header.hero::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: url('https://www.transparenttextures.com/patterns/cubes.png');
+            opacity: 0.25;
+            pointer-events: none;
+        }
+
+        header .navbar {
+            padding: 1rem 0;
+        }
+
+        header .navbar-brand {
+            font-weight: 700;
+            letter-spacing: 0.02em;
+        }
+
+        header h1 {
+            font-size: clamp(2rem, 4vw, 3rem);
+            font-weight: 700;
+        }
+
+        header p.lead {
+            max-width: 640px;
+            font-size: 1.1rem;
+        }
+
+        main {
+            flex: 1;
+            padding: 0 0 4rem;
+        }
+
+        .card-shadow {
+            border: none;
+            border-radius: 18px;
+            box-shadow: 0 25px 60px rgba(15, 23, 42, 0.08);
+        }
+
+        .card-shadow textarea {
+            resize: vertical;
+            min-height: 180px;
+        }
+
+        .badge-pill {
+            border-radius: 999px;
+        }
+
+        .result {
+            margin-top: 1.5rem;
+            padding: 1.25rem 1.5rem;
+            border-radius: 12px;
+            font-weight: 500;
+            display: none;
+        }
+
+        .result.show {
+            display: block;
+        }
+
+        .result.spam {
+            background: rgba(220, 38, 38, 0.12);
+            color: #991b1b;
+            border: 1px solid rgba(220, 38, 38, 0.25);
+        }
+
+        .result.not-spam {
+            background: rgba(22, 163, 74, 0.12);
+            color: #166534;
+            border: 1px solid rgba(22, 163, 74, 0.25);
+        }
+
+        footer {
+            background: #111827;
+            color: #d1d5db;
+            padding: 2rem 0;
+        }
+
+        footer a {
+            color: #f9fafb;
+            text-decoration: none;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
+        }
+
+        .fade-in {
+            animation: fadeIn 0.4s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 768px) {
+            header.hero {
+                padding: 3rem 0 2.5rem;
+            }
+
+            .card-shadow {
+                border-radius: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="hero">
+        <nav class="navbar navbar-dark">
+            <div class="container">
+                <span class="navbar-brand">ArchMail Shield</span>
+                <span class="badge bg-light text-dark badge-pill">Spam Detection Suite</span>
+            </div>
+        </nav>
+        <div class="container position-relative">
+            <div class="row align-items-center">
+                <div class="col-lg-7">
+                    <h1 class="mb-3">Spot spam in seconds with ML-powered precision.</h1>
+                    <p class="lead mb-4">Paste any email content and instantly learn whether it should be trusted. Powered by our tuned Random Forest model trained on the Enron corpus.</p>
+                    <div class="d-flex flex-wrap gap-3">
+                        <span class="badge bg-light text-dark badge-pill">Real-time evaluation</span>
+                        <span class="badge bg-light text-dark badge-pill">Confidence scoring</span>
+                        <span class="badge bg-light text-dark badge-pill">Secure & private*</span>
+                    </div>
+                </div>
+                <div class="col-lg-5 text-lg-end mt-4 mt-lg-0">
+                    <div class="text-white-50 small">*Your text never leaves this session. All predictions are processed locally.</div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <div class="container">
+            <div class="row g-4 align-items-start mt-n5">
+                <div class="col-lg-7">
+                    <div class="card card-shadow p-4 p-lg-5 fade-in">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div>
+                                <h2 class="h4 mb-0">Analyse an email</h2>
+                                <div class="text-muted small" id="threshold-hint">Flags spam when confidence ≥ 70%</div>
+                            </div>
+                            <span class="text-muted small" id="status-label">Ready</span>
+                        </div>
+                        <form id="spam-form" class="needs-validation" novalidate>
+                            <div class="mb-3">
+                                <label for="email-text" class="form-label">Paste the email content below<span class="text-danger">*</span></label>
+                                <textarea class="form-control" id="email-text" placeholder="Dear team..." required></textarea>
+                                <div class="invalid-feedback">Please paste the email you want to analyse.</div>
+                            </div>
+                            <div class="d-grid d-sm-flex gap-3">
+                                <button type="submit" class="btn btn-primary btn-lg px-4" id="submit-btn">
+                                    <span class="spinner-border spinner-border-sm me-2 d-none" id="loading-spinner" role="status" aria-hidden="true"></span>
+                                    Analyse now
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary" id="clear-btn">Clear</button>
+                            </div>
+                        </form>
+                        <div id="result" class="result mt-4" role="status" aria-live="polite"></div>
+                    </div>
+                </div>
+                <div class="col-lg-5">
+                    <div class="card card-shadow h-100 p-4 p-lg-5 fade-in">
+                        <h3 class="h5">Why it works</h3>
+                        <p class="text-muted">Our model examines 3,000+ term frequencies gathered from historic corporate email traffic to detect suspicious patterns that typically indicate spam or phishing.</p>
+                        <ul class="list-unstyled mb-4">
+                            <li class="mb-3"><span class="fw-semibold">Weighted F1-score:</span> 96.8%</li>
+                            <li class="mb-3"><span class="fw-semibold">Best model:</span> Random Forest (GridSearch tuned)</li>
+                            <li class="mb-3"><span class="fw-semibold">Training data:</span> <a ahref="https://www.kaggle.com/datasets/balaka18/email-spam-classification-dataset-csv">Email Spam Classification Dataset (CSV)</a></li>
+                        </ul>
+                        <div class="alert alert-info mb-0" role="alert">
+                            Tip: the classifier works best on full email bodies. Short snippets may not provide enough context.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="row gy-3 align-items-center">
+                <div class="col-md-6 text-md-start text-center">
+                    <strong>ArchMail Shield</strong> &mdash; safeguarding inboxes with machine learning.
+                </div>
+                <div class="col-md-6 text-md-end text-center">
+                    <span class="small">View the project notebook in <a href="../notebooks/spam_classifier_full.ipynb">Jupyter</a> • Contact: <a href="mailto:mtalha1501@gmail.com">mtalha1501@gmail.com</a></span>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        const form = document.getElementById('spam-form');
+        const emailTextArea = document.getElementById('email-text');
+        const resultDiv = document.getElementById('result');
+        const statusLabel = document.getElementById('status-label');
+    const thresholdHint = document.getElementById('threshold-hint');
+        const submitBtn = document.getElementById('submit-btn');
+        const spinner = document.getElementById('loading-spinner');
+        const clearBtn = document.getElementById('clear-btn');
+
+        const setLoading = (isLoading) => {
+            submitBtn.disabled = isLoading;
+            spinner.classList.toggle('d-none', !isLoading);
+            statusLabel.textContent = isLoading ? 'Analysing…' : 'Ready';
+        };
+
+        const displayResult = (payload, isError = false) => {
+            const { message, probability, is_spam, threshold } = payload;
+            const probabilityText = typeof probability === 'number'
+                ? `<div class="mt-2 small text-muted">Confidence of spam: ${(probability * 100).toFixed(1)}%</div>`
+                : '';
+            const thresholdText = typeof threshold === 'number'
+                ? `<div class="mt-1 small text-muted">Spam threshold: ${(threshold * 100).toFixed(0)}%</div>`
+                : '';
+
+            resultDiv.innerHTML = `${message || 'Unexpected response.'}${probabilityText}${thresholdText}`;
+            resultDiv.className = `result show ${isError ? 'spam' : (is_spam ? 'spam' : 'not-spam')}`;
+        };
+
+        form.addEventListener('submit', async (event) => {
+            event.preventDefault();
+
+            form.classList.add('was-validated');
+            if (!form.checkValidity()) {
+                return;
+            }
+
+            setLoading(true);
+            resultDiv.className = 'result';
+            resultDiv.textContent = '';
+
+            try {
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email_text: emailTextArea.value.trim() })
+                });
+                const rawText = await response.text();
+                let data = null;
+
+                if (rawText) {
+                    try {
+                        data = JSON.parse(rawText);
+                    } catch (parseError) {
+                        throw new Error('Server returned invalid JSON.');
+                    }
+                }
+
+                if (!data) {
+                    throw new Error('Server returned an empty response.');
+                }
+
+                if (!response.ok || !data.success) {
+                    throw new Error(data.error || 'Unable to classify email.');
+                }
+
+                displayResult(data);
+                if (typeof data.threshold === 'number') {
+                    thresholdHint.textContent = `Flags spam when confidence ≥ ${(data.threshold * 100).toFixed(0)}%`;
+                }
+            } catch (error) {
+                displayResult({
+                    message: `Error: ${error.message}`,
+                    is_spam: true
+                }, true);
+            } finally {
+                setLoading(false);
+            }
+        });
+
+        clearBtn.addEventListener('click', () => {
+            emailTextArea.value = '';
+            resultDiv.className = 'result';
+            resultDiv.textContent = '';
+            form.classList.remove('was-validated');
+            statusLabel.textContent = 'Ready';
+        });
+    </script>
+</body>
+</html>
