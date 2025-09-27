@@ -1,6 +1,6 @@
 window.APP_CONFIG = Object.assign(
   {
-    apiBaseUrl: null,
+    apiBaseUrl: "https://spam-email-classifier-app.onrender.com",
     spamThreshold: 0.7,
     offlineBoost: {
       spamHit: 0.07,
